@@ -143,13 +143,97 @@ public class OnlineCoursesAnalyzer {
         return map1;
 
     }
+    public Map<String, Integer> getPtcpCountByInstAndSubject(){
+        List<String> Ins_par = new ArrayList<>();
+        for (int i=0;i<list.size()-1;i++){
+            Ins_par.add(Institution.get(i)+"-"+CourseBF_Subject.get(i)+"!"+Participants.get(i));
+        }
+        Stream<String> stream = Ins_par.stream();
+        Map<String, Integer> map1 = stream.collect(Collectors.groupingBy(s->s.split("!")[0],Collectors.summingInt(s->Integer.parseInt(s.split("!")[1]))));
+        return map1;
+    }
+    public Map<String, List<List<String>>> getCourseListOfInstructor(){
+        Map<String,Set<String>> map_independent=new HashMap<>();
+        Map<String,Set<String>> map_codeveloped=new HashMap<>();
+        for (int i=0;i<list.size()-1;i++){
+            if(!Instructors.get(i).contains(", ")){//independent
+                if (map_independent.containsKey(Instructors.get(i))) {//如果已经有KEY
+                    Set<String> set= map_independent.get(Instructors.get(i));;//获得set
+                    set.add(CourseBF_Title.get(i));//加入新对象
+                    map_independent.replace(Instructors.get(i), set);
+                } else {//没有KEY
+                    Set<String> set=new HashSet<>();//装入新LIST
+                    set.add(CourseBF_Title.get(i));
+                    map_independent.put(Instructors.get(i), set);
+                }
+            }else {//codeveloped
+                for(int j=0;j<Instructors.get(i).split(", ").length;j++){
+                    if (map_codeveloped.containsKey(Instructors.get(i).split(", ")[j])) {//如果已经有KEY
+                        Set<String> set= map_codeveloped.get(Instructors.get(i).split(", ")[j]);;//获得set
+                        set.add(CourseBF_Title.get(i));//加入新对象
+                        map_codeveloped.replace(Instructors.get(i).split(", ")[j], set);
+                    }else {//没有KEY
+                        Set<String> set=new HashSet<>();//装入新LIST
+                        set.add(CourseBF_Title.get(i));
+                        map_codeveloped.put(Instructors.get(i).split(", ")[j], set);
+                    }
+                }
+            }
+        }
+//        map_independent.forEach((s,u)->System.out.println(s+u));
+//        map_codeveloped.forEach((s,u)->System.out.println(s+u));
+//        List<String> list_independent = new ArrayList<String> ();
+//        List<String> list_codeveloped = new ArrayList<String> ();
+        Map<String, List<List<String>>> ans = new HashMap<>();
+        for (int i=0;i<list.size()-1;i++){
+            if(!Instructors.get(i).contains(", ")){//independent
+                if (!ans.containsKey(Instructors.get(i))) {//如果没有KEY
+                    List<String> list_independent = new ArrayList<> ();
+                    List<String> list_codeveloped = new ArrayList<> ();
 
+                    if(map_independent.containsKey(Instructors.get(i))){
+                        list_independent.addAll(map_independent.get(Instructors.get(i)));
+                    }
+                    if(map_codeveloped.containsKey(Instructors.get(i))){
+                        list_codeveloped.addAll(map_codeveloped.get(Instructors.get(i)));
+                    }
+
+                    List<List<String>> list_ans = new ArrayList<> ();
+                    list_ans.add(list_independent);
+                    list_ans.add(list_codeveloped);
+                    ans.put(Instructors.get(i), list_ans);
+                }
+            }else {//codeveloped
+                for(int j=0;j<Instructors.get(i).split(", ").length;j++){
+                    if (!ans.containsKey(Instructors.get(i).split(", ")[j])) {//如果没有KEY
+                        List<String> list_independent = new ArrayList<> ();
+                        List<String> list_codeveloped = new ArrayList<> ();
+                        if(map_independent.containsKey(Instructors.get(i).split(", ")[j])){
+                            list_independent.addAll(map_independent.get(Instructors.get(i).split(", ")[j]));
+                        }
+                        if(map_codeveloped.containsKey(Instructors.get(i).split(", ")[j])){
+                            list_codeveloped.addAll(map_codeveloped.get(Instructors.get(i).split(", ")[j]));
+                        }
+                        List<List<String>> list_ans = new ArrayList<> ();
+                        list_ans.add(list_independent);
+                        list_ans.add(list_codeveloped);
+                        ans.put(Instructors.get(i).split(", ")[j], list_ans);
+                    }
+                }
+            }
+        }
+//        ans.forEach((u,v)->System.out.println(u+v));
+        return ans;
+
+    }
 
     public static void main(String[] args)throws Exception {
         OnlineCoursesAnalyzer util = new OnlineCoursesAnalyzer("local.csv");
-        int rowNum = util.getRowNum();
-        int colNum = util.getColNum();
-        System.out.println(util.getPtcpCountByInst());
+//        System.out.println(util.getPtcpCountByInst());
+//        System.out.println(util.getPtcpCountByInstAndSubject());
+//        System.out.println(util.getCourseListOfInstructor());
+
+
 
 //        System.out.println("rowNum:" + rowNum);
 //        System.out.println("colNum:" + colNum);
