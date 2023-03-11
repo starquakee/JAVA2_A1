@@ -123,7 +123,7 @@ public class OnlineCoursesAnalyzer {
 
     public Map<String, Integer> getPtcpCountByInst(){
         List<String> Ins_par = new ArrayList<>();
-        System.out.println(list.size());
+//        System.out.println(list.size());
         for (int i=0;i<list.size()-1;i++){
             Ins_par.add(Institution.get(i)+"!"+Participants.get(i));
             System.out.println(Institution.get(i)+"!"+Participants.get(i));
@@ -224,15 +224,157 @@ public class OnlineCoursesAnalyzer {
         }
 //        ans.forEach((u,v)->System.out.println(u+v));
         return ans;
+    }
+    public List<String> getCourses(int topK, String by){
+        List<String> Ins_par = new ArrayList<>();
+        List<String> ans = new ArrayList<>();
+        for (int i=0;i<list.size()-1;i++){
+            Ins_par.add(CourseBF_Title.get(i)+"!"+Total_CourseBF_Hours.get(i)+"!"+Participants.get(i));
+//            System.out.println(CourseBF_Title.get(i)+"!"+Total_CourseBF_Hours.get(i));
+        }
+        Stream<String> stream = Ins_par.stream();
+//        Map<String, Double> map1 = stream.collect(Collectors.groupingBy(s->s.split("!")[0],Collectors.maxBy(Comparator.comparing(s->Double.parseDouble(s.split("!")[1]))))))
+//        Map<String,List<String>> map = list.stream().collect(Collectors.groupingBy(s->s.split("!")[0]));
+        Map<String, DoubleSummaryStatistics> collect = null;
+        if(Objects.equals(by, "hours")){
+            collect = stream.collect(
+                    Collectors.groupingBy(s->s.split("!")[0],
+                            Collectors.summarizingDouble(s->Double.parseDouble(s.split("!")[1]))));
+        }else if(Objects.equals(by, "participants")){
+            collect = stream.collect(
+                    Collectors.groupingBy(s->s.split("!")[0],
+                            Collectors.summarizingDouble(s->Double.parseDouble(s.split("!")[2]))));
+        }
+
+        for (int i=0;i<topK;i++){
+            double max = -111111111;
+            String max_name = "";
+            Map.Entry<String, DoubleSummaryStatistics> todelete = null;
+            for (Map.Entry<String, DoubleSummaryStatistics> entry : collect.entrySet()) {
+                DoubleSummaryStatistics doubleSummaryStatistics = entry.getValue();
+                if(doubleSummaryStatistics.getMax()>max){
+                    max = doubleSummaryStatistics.getMax();
+                    todelete = entry;
+                    max_name = entry.getKey();
+                }
+//                System.out.println("----------------key----------------" + entry.getKey());
+//                System.out.println("求最大:" + doubleSummaryStatistics.getMax());
+//                System.out.println("求最小:" + doubleSummaryStatistics.getMin());
+//                System.out.println("求总数:" + doubleSummaryStatistics.getCount());
+            }
+//            System.out.println(max);
+            ans.add(max_name);
+            collect.entrySet().remove(todelete);
+        }
+        Collections.sort(ans);
+        return ans;
+    }
+    public List<String> searchCourses(String courseSubject, double
+            percentAudited, double totalCourseHours){
+        Set<String> set = new HashSet<>();
+        List<String> Ins_par = new ArrayList<>();
+        for (int i=0;i<list.size()-1;i++){
+            Ins_par.add(CourseBF_Subject.get(i)+"!"+p_Audited.get(i)+"!"+Total_CourseBF_Hours.get(i)+"!"+CourseBF_Title.get(i));
+        }
+        Stream<String> stream = Ins_par.stream();
+        set = stream.filter(s->Double.parseDouble(s.split("!")[1])>=percentAudited
+                &&Double.parseDouble(s.split("!")[2])<=totalCourseHours
+                &&s.split("!")[0].toLowerCase().contains(courseSubject.toLowerCase())).collect(Collectors.toSet());
+        List<String> ans = new ArrayList<>();
+        for(String value: set){
+            ans.add(value.split("!")[3]);
+        }
+        Collections.sort(ans);
+        return ans;
+    }
+
+    public List<String> recommendCourses(int age, int gender, int
+            isBachelorOrHigher){
+        List<String> Ins_par = new ArrayList<>();
+        for (int i=0;i<list.size()-1;i++){
+            Ins_par.add(CourseBF_Number.get(i)+"!"+Median_Age.get(i)+"!"+p_Male.get(i)+"!"+p_Bachelor.get(i));
+        }
+        Stream<String> stream = Ins_par.stream();
+        Map<String, Double> map_age = stream.collect(Collectors.groupingBy(s->s.split("!")[0],Collectors.averagingDouble(s->Double.parseDouble(s.split("!")[1]))));
+        stream = Ins_par.stream();
+        Map<String, Double> map_male = stream.collect(Collectors.groupingBy(s->s.split("!")[0],Collectors.averagingDouble(s->Double.parseDouble(s.split("!")[2]))));
+        stream = Ins_par.stream();
+        Map<String, Double> map_bachelor = stream.collect(Collectors.groupingBy(s->s.split("!")[0],Collectors.averagingDouble(s->Double.parseDouble(s.split("!")[3]))));
+        Map<String, Double> map_simi = new HashMap<>();
+        for(String key : map_age.keySet()){
+            double similarity = Math.pow((double) age-map_age.get(key),2)+Math.pow((double) gender*100-map_male.get(key),2)+Math.pow((double) isBachelorOrHigher*100-map_bachelor.get(key),2);
+            map_simi.put(key, similarity);
+        }
+        List<String> list_num = new ArrayList<>();
+        System.out.println(map_simi);
+        for(int i=0;i<10;i++){
+            double min = 99999999;
+            String min_key="";
+            for(String key : map_simi.keySet()){
+                if(map_simi.get(key)<min){
+                    min = map_simi.get(key);
+                    min_key=key;
+                }
+            }
+            list_num.add(min_key);
+            map_simi.remove(min_key);
+        }
+        System.out.println(list_num);
+        List<String> ans = new ArrayList<>();
+        for(int j=0;j<10;j++){
+            int max = 0;
+            String max_title="";
+            for (int i=0;i<list.size()-1;i++){
+                if(Objects.equals(CourseBF_Number.get(i), list_num.get(j))){
+                    int days = Integer.parseInt(Launch_Date.get(i).split("/")[0])*30+
+                                Integer.parseInt(Launch_Date.get(i).split("/")[1])
+                            +Integer.parseInt(Launch_Date.get(i).split("/")[2])*365;
+                    if (days>max){
+                        max = days;
+                        max_title = CourseBF_Title.get(i);
+                    }
+
+                }
+            }
+            ans.add(max_title);
+
+
+
+
+//            Ins_par1.add(CourseBF_Number.get(i)+"!"+CourseBF_Title.get(i)+"!"+Launch_Date.get(i));
+//        }
+//
+//
+//
+//        Map<String, IntSummaryStatistics> collect = null;
+//        collect = stream.collect(
+//                Collectors.groupingBy(s->s.split("!")[0],
+//                        Collectors.summarizingInt(s->Integer.parseInt(s.split("!")[2].split("/")[0])*30+
+//                                Integer.parseInt(s.split("!")[2].split("/")[1])+Integer.parseInt(s.split("!")[2].split("/")[2])*365)));
+//        for (Map.Entry<String, IntSummaryStatistics> entry : collect.entrySet()) {
+//            IntSummaryStatistics doubleSummaryStatistics = entry.getValue();
+
+//            max = doubleSummaryStatistics.getMax();
+//            todelete = entry;
+//            max_name = entry.getKey();
+
+        }
+        return ans;
+
+
+
 
     }
+
 
     public static void main(String[] args)throws Exception {
         OnlineCoursesAnalyzer util = new OnlineCoursesAnalyzer("local.csv");
 //        System.out.println(util.getPtcpCountByInst());
 //        System.out.println(util.getPtcpCountByInstAndSubject());
 //        System.out.println(util.getCourseListOfInstructor());
-
+//        System.out.println(util.getCourses(6,"hours"));
+//        System.out.println(util.searchCourses("Science",15.01, 500.1));
+        System.out.println(util.recommendCourses(1,1,1));
 
 
 //        System.out.println("rowNum:" + rowNum);
