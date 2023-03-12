@@ -44,8 +44,8 @@ public class OnlineCoursesAnalyzer {
         }
         int rowNum = this.getRowNum();
         int colNum = this.getColNum();
-        System.out.println("rowNum:" + rowNum);
-        System.out.println("colNum:" + colNum);
+//        System.out.println("rowNum:" + rowNum);
+//        System.out.println("colNum:" + colNum);
 
         for(int i=1;i<rowNum;i++){
             this.Institution.add(this.getString(i, 0));
@@ -126,21 +126,24 @@ public class OnlineCoursesAnalyzer {
 //        System.out.println(list.size());
         for (int i=0;i<list.size()-1;i++){
             Ins_par.add(Institution.get(i)+"!"+Participants.get(i));
-            System.out.println(Institution.get(i)+"!"+Participants.get(i));
+//            System.out.println(Institution.get(i)+"!"+Participants.get(i));
         }
         Stream<String> stream = Ins_par.stream();
         Map<String, Integer> map1 = stream.collect(Collectors.groupingBy(s->s.split("!")[0],Collectors.summingInt(s->Integer.parseInt(s.split("!")[1]))));
 
-//        List<Map.Entry<String, Integer>> entryList1 = new ArrayList<Map.Entry<String, Integer>>(map1.entrySet());
-//        Collections.sort(entryList1, new Comparator<Map.Entry<String, Integer>>() {
-//            @Override
-//            public int compare(Map.Entry<String, Integer> me1, Map.Entry<String, Integer> me2) {
-//                return me1.getKey().compareTo(me2.getKey()); // 升序排序
-//
-//            }
-//        });
-//        System.out.println("第一种Map排序方式, 根据key排序: \n" + entryList1);
-        return map1;
+        List<Map.Entry<String, Integer>> entryList1 = new ArrayList<Map.Entry<String, Integer>>(map1.entrySet());
+        Collections.sort(entryList1, new Comparator<Map.Entry<String, Integer>>() {
+            @Override
+            public int compare(Map.Entry<String, Integer> me1, Map.Entry<String, Integer> me2) {
+                return me1.getKey().compareTo(me2.getKey());
+
+            }
+        });
+        Map<String, Integer> ans = new LinkedHashMap<>();
+        for (Map.Entry<String, Integer> stringIntegerEntry : entryList1) {
+            ans.put(stringIntegerEntry.getKey(), stringIntegerEntry.getValue());
+        }
+        return ans;
 
     }
     public Map<String, Integer> getPtcpCountByInstAndSubject(){
@@ -150,30 +153,43 @@ public class OnlineCoursesAnalyzer {
         }
         Stream<String> stream = Ins_par.stream();
         Map<String, Integer> map1 = stream.collect(Collectors.groupingBy(s->s.split("!")[0],Collectors.summingInt(s->Integer.parseInt(s.split("!")[1]))));
-        return map1;
+        List<Map.Entry<String, Integer>> entryList1 = new ArrayList<Map.Entry<String, Integer>>(map1.entrySet());
+        Collections.sort(entryList1, new Comparator<Map.Entry<String, Integer>>() {
+            @Override
+            public int compare(Map.Entry<String, Integer> me1, Map.Entry<String, Integer> me2) {
+                return me2.getValue().compareTo(me1.getValue());
+
+            }
+        });
+//        System.out.println(entryList1.get(0).getKey());
+        Map<String, Integer> ans = new LinkedHashMap<>();
+        for (Map.Entry<String, Integer> stringIntegerEntry : entryList1) {
+            ans.put(stringIntegerEntry.getKey(), stringIntegerEntry.getValue());
+        }
+        return ans;
     }
     public Map<String, List<List<String>>> getCourseListOfInstructor(){
         Map<String,Set<String>> map_independent=new HashMap<>();
         Map<String,Set<String>> map_codeveloped=new HashMap<>();
         for (int i=0;i<list.size()-1;i++){
             if(!Instructors.get(i).contains(", ")){//independent
-                if (map_independent.containsKey(Instructors.get(i))) {//如果已经有KEY
-                    Set<String> set= map_independent.get(Instructors.get(i));;//获得set
-                    set.add(CourseBF_Title.get(i));//加入新对象
+                if (map_independent.containsKey(Instructors.get(i))) {
+                    Set<String> set= map_independent.get(Instructors.get(i));
+                    set.add(CourseBF_Title.get(i));
                     map_independent.replace(Instructors.get(i), set);
-                } else {//没有KEY
-                    Set<String> set=new HashSet<>();//装入新LIST
+                } else {
+                    Set<String> set=new HashSet<>();
                     set.add(CourseBF_Title.get(i));
                     map_independent.put(Instructors.get(i), set);
                 }
             }else {//codeveloped
                 for(int j=0;j<Instructors.get(i).split(", ").length;j++){
-                    if (map_codeveloped.containsKey(Instructors.get(i).split(", ")[j])) {//如果已经有KEY
-                        Set<String> set= map_codeveloped.get(Instructors.get(i).split(", ")[j]);;//获得set
-                        set.add(CourseBF_Title.get(i));//加入新对象
+                    if (map_codeveloped.containsKey(Instructors.get(i).split(", ")[j])) {
+                        Set<String> set= map_codeveloped.get(Instructors.get(i).split(", ")[j]);
+                        set.add(CourseBF_Title.get(i));
                         map_codeveloped.replace(Instructors.get(i).split(", ")[j], set);
-                    }else {//没有KEY
-                        Set<String> set=new HashSet<>();//装入新LIST
+                    }else {
+                        Set<String> set=new HashSet<>();
                         set.add(CourseBF_Title.get(i));
                         map_codeveloped.put(Instructors.get(i).split(", ")[j], set);
                     }
@@ -187,15 +203,17 @@ public class OnlineCoursesAnalyzer {
         Map<String, List<List<String>>> ans = new HashMap<>();
         for (int i=0;i<list.size()-1;i++){
             if(!Instructors.get(i).contains(", ")){//independent
-                if (!ans.containsKey(Instructors.get(i))) {//如果没有KEY
+                if (!ans.containsKey(Instructors.get(i))) {
                     List<String> list_independent = new ArrayList<> ();
                     List<String> list_codeveloped = new ArrayList<> ();
 
                     if(map_independent.containsKey(Instructors.get(i))){
                         list_independent.addAll(map_independent.get(Instructors.get(i)));
+                        Collections.sort(list_independent);
                     }
                     if(map_codeveloped.containsKey(Instructors.get(i))){
                         list_codeveloped.addAll(map_codeveloped.get(Instructors.get(i)));
+                        Collections.sort(list_codeveloped);
                     }
 
                     List<List<String>> list_ans = new ArrayList<> ();
@@ -205,14 +223,16 @@ public class OnlineCoursesAnalyzer {
                 }
             }else {//codeveloped
                 for(int j=0;j<Instructors.get(i).split(", ").length;j++){
-                    if (!ans.containsKey(Instructors.get(i).split(", ")[j])) {//如果没有KEY
+                    if (!ans.containsKey(Instructors.get(i).split(", ")[j])) {
                         List<String> list_independent = new ArrayList<> ();
                         List<String> list_codeveloped = new ArrayList<> ();
                         if(map_independent.containsKey(Instructors.get(i).split(", ")[j])){
                             list_independent.addAll(map_independent.get(Instructors.get(i).split(", ")[j]));
+                            Collections.sort(list_independent);
                         }
                         if(map_codeveloped.containsKey(Instructors.get(i).split(", ")[j])){
                             list_codeveloped.addAll(map_codeveloped.get(Instructors.get(i).split(", ")[j]));
+                            Collections.sort(list_codeveloped);
                         }
                         List<List<String>> list_ans = new ArrayList<> ();
                         list_ans.add(list_independent);
@@ -257,16 +277,11 @@ public class OnlineCoursesAnalyzer {
                     todelete = entry;
                     max_name = entry.getKey();
                 }
-//                System.out.println("----------------key----------------" + entry.getKey());
-//                System.out.println("求最大:" + doubleSummaryStatistics.getMax());
-//                System.out.println("求最小:" + doubleSummaryStatistics.getMin());
-//                System.out.println("求总数:" + doubleSummaryStatistics.getCount());
             }
 //            System.out.println(max);
             ans.add(max_name);
             collect.entrySet().remove(todelete);
         }
-        Collections.sort(ans);
         return ans;
     }
     public List<String> searchCourses(String courseSubject, double
@@ -284,8 +299,9 @@ public class OnlineCoursesAnalyzer {
         for(String value: set){
             ans.add(value.split("!")[3]);
         }
+
         Collections.sort(ans);
-        return ans;
+        return ans.stream().distinct().collect(Collectors.toList());
     }
 
     public List<String> recommendCourses(int age, int gender, int
@@ -326,7 +342,7 @@ public class OnlineCoursesAnalyzer {
             String max_title="";
             for (int i=0;i<list.size()-1;i++){
                 if(Objects.equals(CourseBF_Number.get(i), list_num.get(j))){
-                    int days = Integer.parseInt(Launch_Date.get(i).split("/")[0])*30+
+                    int days = Integer.parseInt(Launch_Date.get(i).split("/")[0])*31+
                                 Integer.parseInt(Launch_Date.get(i).split("/")[1])
                             +Integer.parseInt(Launch_Date.get(i).split("/")[2])*365;
                     if (days>max){
@@ -338,31 +354,8 @@ public class OnlineCoursesAnalyzer {
             }
             ans.add(max_title);
 
-
-
-
-//            Ins_par1.add(CourseBF_Number.get(i)+"!"+CourseBF_Title.get(i)+"!"+Launch_Date.get(i));
-//        }
-//
-//
-//
-//        Map<String, IntSummaryStatistics> collect = null;
-//        collect = stream.collect(
-//                Collectors.groupingBy(s->s.split("!")[0],
-//                        Collectors.summarizingInt(s->Integer.parseInt(s.split("!")[2].split("/")[0])*30+
-//                                Integer.parseInt(s.split("!")[2].split("/")[1])+Integer.parseInt(s.split("!")[2].split("/")[2])*365)));
-//        for (Map.Entry<String, IntSummaryStatistics> entry : collect.entrySet()) {
-//            IntSummaryStatistics doubleSummaryStatistics = entry.getValue();
-
-//            max = doubleSummaryStatistics.getMax();
-//            todelete = entry;
-//            max_name = entry.getKey();
-
         }
         return ans;
-
-
-
 
     }
 
@@ -371,30 +364,12 @@ public class OnlineCoursesAnalyzer {
         OnlineCoursesAnalyzer util = new OnlineCoursesAnalyzer("local.csv");
 //        System.out.println(util.getPtcpCountByInst());
 //        System.out.println(util.getPtcpCountByInstAndSubject());
+//        util.getCourseListOfInstructor().forEach((s,v)->System.out.println(s+v));
 //        System.out.println(util.getCourseListOfInstructor());
-//        System.out.println(util.getCourses(6,"hours"));
-//        System.out.println(util.searchCourses("Science",15.01, 500.1));
-        System.out.println(util.recommendCourses(1,1,1));
-
-
-//        System.out.println("rowNum:" + rowNum);
-//        System.out.println("colNum:" + colNum);
-//
-//        for(int i=1;i<rowNum;i++){
-//            for(int j=0;j<colNum;j++){
-//                System.out.println("result[" + i + "|" + j + "]:" + util.getString(i, j));
-//            }
-//        }
-
-
-
-//        System.out.println(util.getRow(23));
-
-//        String [] userInfos = util.getRow(23).split(",(?=([^\"]*\"[^\"]*\")*[^\"]*$)");
-//        System.out.println(userInfos.length);
-//        for (String userInfo : userInfos) {
-//            System.out.println(userInfo);
-//        }
+//        System.out.println(util.getCourses(15,"participants"));
+//        util.searchCourses("SCIENCE", 25.0, 400).forEach(System.out::println);
+//        System.out.println(util.recommendCourses(25, 1, 1));
+        util.recommendCourses(25,1,1).forEach(System.out::println);
 
     }
 }

@@ -72,6 +72,9 @@ public class test {
     }
 
     public static void main(String[] args) {
+        int a = 25;
+        double b = 31.11;
+        System.out.println(a-b);
         // TODO Auto-generated method stub
         List<Fruit> list = initDate();
 
