@@ -32,9 +32,6 @@ public class OnlineCoursesAnalyzer {
     public List<Double> p_Bachelor = new ArrayList<>();
 
 
-
-
-
     public OnlineCoursesAnalyzer(String fileName) throws Exception {
         br = new BufferedReader(new FileReader(fileName));
 
@@ -44,26 +41,24 @@ public class OnlineCoursesAnalyzer {
         }
         int rowNum = this.getRowNum();
         int colNum = this.getColNum();
-//        System.out.println("rowNum:" + rowNum);
-//        System.out.println("colNum:" + colNum);
 
-        for(int i=1;i<rowNum;i++){
+        for (int i = 1; i < rowNum; i++) {
             this.Institution.add(this.getString(i, 0));
             this.CourseBF_Number.add(this.getString(i, 1));
             this.Launch_Date.add(this.getString(i, 2));
-            if (this.getString(i, 3).contains("\"")){
+            if (this.getString(i, 3).contains("\"")) {
                 this.CourseBF_Title.add(this.getString(i, 3).split("\"")[1]);
-            }else {
+            } else {
                 this.CourseBF_Title.add(this.getString(i, 3));
             }
-            if (this.getString(i, 4).contains("\"")){
+            if (this.getString(i, 4).contains("\"")) {
                 this.Instructors.add(this.getString(i, 4).split("\"")[1]);
-            }else {
+            } else {
                 this.Instructors.add(this.getString(i, 4));
             }
-            if (this.getString(i, 5).contains("\"")){
+            if (this.getString(i, 5).contains("\"")) {
                 this.CourseBF_Subject.add(this.getString(i, 5).split("\"")[1]);
-            }else {
+            } else {
                 this.CourseBF_Subject.add(this.getString(i, 5));
             }
             this.Year.add(Integer.parseInt(this.getString(i, 6)));
@@ -107,13 +102,13 @@ public class OnlineCoursesAnalyzer {
     }
 
 
-
     public String getString(int row, int col) {
         String temp;
         int colnum = this.getColNum();
         if (colnum > 1) {
-            temp = list.get(row).split(",(?=([^\"]*\"[^\"]*\")*[^\"]*$)")[col];;
-        } else if(colnum == 1){
+            temp = list.get(row).split(",(?=([^\"]*\"[^\"]*\")*[^\"]*$)")[col];
+            ;
+        } else if (colnum == 1) {
             temp = list.get(row).toString();
         } else {
             temp = null;
@@ -121,15 +116,15 @@ public class OnlineCoursesAnalyzer {
         return temp;
     }
 
-    public Map<String, Integer> getPtcpCountByInst(){
+    public Map<String, Integer> getPtcpCountByInst() {
         List<String> Ins_par = new ArrayList<>();
 //        System.out.println(list.size());
-        for (int i=0;i<list.size()-1;i++){
-            Ins_par.add(Institution.get(i)+"!"+Participants.get(i));
+        for (int i = 0; i < list.size() - 1; i++) {
+            Ins_par.add(Institution.get(i) + "!" + Participants.get(i));
 //            System.out.println(Institution.get(i)+"!"+Participants.get(i));
         }
         Stream<String> stream = Ins_par.stream();
-        Map<String, Integer> map1 = stream.collect(Collectors.groupingBy(s->s.split("!")[0],Collectors.summingInt(s->Integer.parseInt(s.split("!")[1]))));
+        Map<String, Integer> map1 = stream.collect(Collectors.groupingBy(s -> s.split("!")[0], Collectors.summingInt(s -> Integer.parseInt(s.split("!")[1]))));
 
         List<Map.Entry<String, Integer>> entryList1 = new ArrayList<Map.Entry<String, Integer>>(map1.entrySet());
         Collections.sort(entryList1, new Comparator<Map.Entry<String, Integer>>() {
@@ -146,13 +141,14 @@ public class OnlineCoursesAnalyzer {
         return ans;
 
     }
-    public Map<String, Integer> getPtcpCountByInstAndSubject(){
+
+    public Map<String, Integer> getPtcpCountByInstAndSubject() {
         List<String> Ins_par = new ArrayList<>();
-        for (int i=0;i<list.size()-1;i++){
-            Ins_par.add(Institution.get(i)+"-"+CourseBF_Subject.get(i)+"!"+Participants.get(i));
+        for (int i = 0; i < list.size() - 1; i++) {
+            Ins_par.add(Institution.get(i) + "-" + CourseBF_Subject.get(i) + "!" + Participants.get(i));
         }
         Stream<String> stream = Ins_par.stream();
-        Map<String, Integer> map1 = stream.collect(Collectors.groupingBy(s->s.split("!")[0],Collectors.summingInt(s->Integer.parseInt(s.split("!")[1]))));
+        Map<String, Integer> map1 = stream.collect(Collectors.groupingBy(s -> s.split("!")[0], Collectors.summingInt(s -> Integer.parseInt(s.split("!")[1]))));
         List<Map.Entry<String, Integer>> entryList1 = new ArrayList<Map.Entry<String, Integer>>(map1.entrySet());
         Collections.sort(entryList1, new Comparator<Map.Entry<String, Integer>>() {
             @Override
@@ -161,80 +157,76 @@ public class OnlineCoursesAnalyzer {
 
             }
         });
-//        System.out.println(entryList1.get(0).getKey());
         Map<String, Integer> ans = new LinkedHashMap<>();
         for (Map.Entry<String, Integer> stringIntegerEntry : entryList1) {
             ans.put(stringIntegerEntry.getKey(), stringIntegerEntry.getValue());
         }
         return ans;
     }
-    public Map<String, List<List<String>>> getCourseListOfInstructor(){
-        Map<String,Set<String>> map_independent=new HashMap<>();
-        Map<String,Set<String>> map_codeveloped=new HashMap<>();
-        for (int i=0;i<list.size()-1;i++){
-            if(!Instructors.get(i).contains(", ")){//independent
+
+    public Map<String, List<List<String>>> getCourseListOfInstructor() {
+        Map<String, Set<String>> map_independent = new HashMap<>();
+        Map<String, Set<String>> map_codeveloped = new HashMap<>();
+        for (int i = 0; i < list.size() - 1; i++) {
+            if (!Instructors.get(i).contains(", ")) {//independent
                 if (map_independent.containsKey(Instructors.get(i))) {
-                    Set<String> set= map_independent.get(Instructors.get(i));
+                    Set<String> set = map_independent.get(Instructors.get(i));
                     set.add(CourseBF_Title.get(i));
                     map_independent.replace(Instructors.get(i), set);
                 } else {
-                    Set<String> set=new HashSet<>();
+                    Set<String> set = new HashSet<>();
                     set.add(CourseBF_Title.get(i));
                     map_independent.put(Instructors.get(i), set);
                 }
-            }else {//codeveloped
-                for(int j=0;j<Instructors.get(i).split(", ").length;j++){
+            } else {//codeveloped
+                for (int j = 0; j < Instructors.get(i).split(", ").length; j++) {
                     if (map_codeveloped.containsKey(Instructors.get(i).split(", ")[j])) {
-                        Set<String> set= map_codeveloped.get(Instructors.get(i).split(", ")[j]);
+                        Set<String> set = map_codeveloped.get(Instructors.get(i).split(", ")[j]);
                         set.add(CourseBF_Title.get(i));
                         map_codeveloped.replace(Instructors.get(i).split(", ")[j], set);
-                    }else {
-                        Set<String> set=new HashSet<>();
+                    } else {
+                        Set<String> set = new HashSet<>();
                         set.add(CourseBF_Title.get(i));
                         map_codeveloped.put(Instructors.get(i).split(", ")[j], set);
                     }
                 }
             }
         }
-//        map_independent.forEach((s,u)->System.out.println(s+u));
-//        map_codeveloped.forEach((s,u)->System.out.println(s+u));
-//        List<String> list_independent = new ArrayList<String> ();
-//        List<String> list_codeveloped = new ArrayList<String> ();
         Map<String, List<List<String>>> ans = new HashMap<>();
-        for (int i=0;i<list.size()-1;i++){
-            if(!Instructors.get(i).contains(", ")){//independent
+        for (int i = 0; i < list.size() - 1; i++) {
+            if (!Instructors.get(i).contains(", ")) {
                 if (!ans.containsKey(Instructors.get(i))) {
-                    List<String> list_independent = new ArrayList<> ();
-                    List<String> list_codeveloped = new ArrayList<> ();
+                    List<String> list_independent = new ArrayList<>();
+                    List<String> list_codeveloped = new ArrayList<>();
 
-                    if(map_independent.containsKey(Instructors.get(i))){
+                    if (map_independent.containsKey(Instructors.get(i))) {
                         list_independent.addAll(map_independent.get(Instructors.get(i)));
                         Collections.sort(list_independent);
                     }
-                    if(map_codeveloped.containsKey(Instructors.get(i))){
+                    if (map_codeveloped.containsKey(Instructors.get(i))) {
                         list_codeveloped.addAll(map_codeveloped.get(Instructors.get(i)));
                         Collections.sort(list_codeveloped);
                     }
 
-                    List<List<String>> list_ans = new ArrayList<> ();
+                    List<List<String>> list_ans = new ArrayList<>();
                     list_ans.add(list_independent);
                     list_ans.add(list_codeveloped);
                     ans.put(Instructors.get(i), list_ans);
                 }
-            }else {//codeveloped
-                for(int j=0;j<Instructors.get(i).split(", ").length;j++){
+            } else {
+                for (int j = 0; j < Instructors.get(i).split(", ").length; j++) {
                     if (!ans.containsKey(Instructors.get(i).split(", ")[j])) {
-                        List<String> list_independent = new ArrayList<> ();
-                        List<String> list_codeveloped = new ArrayList<> ();
-                        if(map_independent.containsKey(Instructors.get(i).split(", ")[j])){
+                        List<String> list_independent = new ArrayList<>();
+                        List<String> list_codeveloped = new ArrayList<>();
+                        if (map_independent.containsKey(Instructors.get(i).split(", ")[j])) {
                             list_independent.addAll(map_independent.get(Instructors.get(i).split(", ")[j]));
                             Collections.sort(list_independent);
                         }
-                        if(map_codeveloped.containsKey(Instructors.get(i).split(", ")[j])){
+                        if (map_codeveloped.containsKey(Instructors.get(i).split(", ")[j])) {
                             list_codeveloped.addAll(map_codeveloped.get(Instructors.get(i).split(", ")[j]));
                             Collections.sort(list_codeveloped);
                         }
-                        List<List<String>> list_ans = new ArrayList<> ();
+                        List<List<String>> list_ans = new ArrayList<>();
                         list_ans.add(list_independent);
                         list_ans.add(list_codeveloped);
                         ans.put(Instructors.get(i).split(", ")[j], list_ans);
@@ -242,61 +234,58 @@ public class OnlineCoursesAnalyzer {
                 }
             }
         }
-//        ans.forEach((u,v)->System.out.println(u+v));
         return ans;
     }
-    public List<String> getCourses(int topK, String by){
+
+    public List<String> getCourses(int topK, String by) {
         List<String> Ins_par = new ArrayList<>();
         List<String> ans = new ArrayList<>();
-        for (int i=0;i<list.size()-1;i++){
-            Ins_par.add(CourseBF_Title.get(i)+"!"+Total_CourseBF_Hours.get(i)+"!"+Participants.get(i));
-//            System.out.println(CourseBF_Title.get(i)+"!"+Total_CourseBF_Hours.get(i));
+        for (int i = 0; i < list.size() - 1; i++) {
+            Ins_par.add(CourseBF_Title.get(i) + "!" + Total_CourseBF_Hours.get(i) + "!" + Participants.get(i));
         }
         Stream<String> stream = Ins_par.stream();
-//        Map<String, Double> map1 = stream.collect(Collectors.groupingBy(s->s.split("!")[0],Collectors.maxBy(Comparator.comparing(s->Double.parseDouble(s.split("!")[1]))))))
-//        Map<String,List<String>> map = list.stream().collect(Collectors.groupingBy(s->s.split("!")[0]));
         Map<String, DoubleSummaryStatistics> collect = null;
-        if(Objects.equals(by, "hours")){
+        if (Objects.equals(by, "hours")) {
             collect = stream.collect(
-                    Collectors.groupingBy(s->s.split("!")[0],
-                            Collectors.summarizingDouble(s->Double.parseDouble(s.split("!")[1]))));
-        }else if(Objects.equals(by, "participants")){
+                    Collectors.groupingBy(s -> s.split("!")[0],
+                            Collectors.summarizingDouble(s -> Double.parseDouble(s.split("!")[1]))));
+        } else if (Objects.equals(by, "participants")) {
             collect = stream.collect(
-                    Collectors.groupingBy(s->s.split("!")[0],
-                            Collectors.summarizingDouble(s->Double.parseDouble(s.split("!")[2]))));
+                    Collectors.groupingBy(s -> s.split("!")[0],
+                            Collectors.summarizingDouble(s -> Double.parseDouble(s.split("!")[2]))));
         }
 
-        for (int i=0;i<topK;i++){
+        for (int i = 0; i < topK; i++) {
             double max = -111111111;
             String max_name = "";
             Map.Entry<String, DoubleSummaryStatistics> todelete = null;
             for (Map.Entry<String, DoubleSummaryStatistics> entry : collect.entrySet()) {
                 DoubleSummaryStatistics doubleSummaryStatistics = entry.getValue();
-                if(doubleSummaryStatistics.getMax()>max){
+                if (doubleSummaryStatistics.getMax() > max) {
                     max = doubleSummaryStatistics.getMax();
                     todelete = entry;
                     max_name = entry.getKey();
                 }
             }
-//            System.out.println(max);
             ans.add(max_name);
             collect.entrySet().remove(todelete);
         }
         return ans;
     }
+
     public List<String> searchCourses(String courseSubject, double
-            percentAudited, double totalCourseHours){
+            percentAudited, double totalCourseHours) {
         Set<String> set = new HashSet<>();
         List<String> Ins_par = new ArrayList<>();
-        for (int i=0;i<list.size()-1;i++){
-            Ins_par.add(CourseBF_Subject.get(i)+"!"+p_Audited.get(i)+"!"+Total_CourseBF_Hours.get(i)+"!"+CourseBF_Title.get(i));
+        for (int i = 0; i < list.size() - 1; i++) {
+            Ins_par.add(CourseBF_Subject.get(i) + "!" + p_Audited.get(i) + "!" + Total_CourseBF_Hours.get(i) + "!" + CourseBF_Title.get(i));
         }
         Stream<String> stream = Ins_par.stream();
-        set = stream.filter(s->Double.parseDouble(s.split("!")[1])>=percentAudited
-                &&Double.parseDouble(s.split("!")[2])<=totalCourseHours
-                &&s.split("!")[0].toLowerCase().contains(courseSubject.toLowerCase())).collect(Collectors.toSet());
+        set = stream.filter(s -> Double.parseDouble(s.split("!")[1]) >= percentAudited
+                && Double.parseDouble(s.split("!")[2]) <= totalCourseHours
+                && s.split("!")[0].toLowerCase().contains(courseSubject.toLowerCase())).collect(Collectors.toSet());
         List<String> ans = new ArrayList<>();
-        for(String value: set){
+        for (String value : set) {
             ans.add(value.split("!")[3]);
         }
 
@@ -305,71 +294,68 @@ public class OnlineCoursesAnalyzer {
     }
 
     public List<String> recommendCourses(int age, int gender, int
-            isBachelorOrHigher){
+            isBachelorOrHigher) {
         List<String> Ins_par = new ArrayList<>();
-        for (int i=0;i<list.size()-1;i++){
-            Ins_par.add(CourseBF_Number.get(i)+"!"+Median_Age.get(i)+"!"+p_Male.get(i)+"!"+p_Bachelor.get(i));
+        for (int i = 0; i < list.size() - 1; i++) {
+            Ins_par.add(CourseBF_Number.get(i) + "!" + Median_Age.get(i).toString() + "!" + p_Male.get(i).toString() + "!" + p_Bachelor.get(i).toString());
         }
         Stream<String> stream = Ins_par.stream();
-        Map<String, Double> map_age = stream.collect(Collectors.groupingBy(s->s.split("!")[0],Collectors.averagingDouble(s->Double.parseDouble(s.split("!")[1]))));
+        Map<String, Double> map_age = stream.collect(Collectors.groupingBy(s -> s.split("!")[0], Collectors.averagingDouble(s -> Double.parseDouble(s.split("!")[1]))));
         stream = Ins_par.stream();
-        Map<String, Double> map_male = stream.collect(Collectors.groupingBy(s->s.split("!")[0],Collectors.averagingDouble(s->Double.parseDouble(s.split("!")[2]))));
+        Map<String, Double> map_male = stream.collect(Collectors.groupingBy(s -> s.split("!")[0], Collectors.averagingDouble(s -> Double.parseDouble(s.split("!")[2]))));
         stream = Ins_par.stream();
-        Map<String, Double> map_bachelor = stream.collect(Collectors.groupingBy(s->s.split("!")[0],Collectors.averagingDouble(s->Double.parseDouble(s.split("!")[3]))));
+        Map<String, Double> map_bachelor = stream.collect(Collectors.groupingBy(s -> s.split("!")[0], Collectors.averagingDouble(s -> Double.parseDouble(s.split("!")[3]))));
         Map<String, Double> map_simi = new HashMap<>();
-        for(String key : map_age.keySet()){
-            double similarity = Math.pow((double) age-map_age.get(key),2)+Math.pow((double) gender*100-map_male.get(key),2)+Math.pow((double) isBachelorOrHigher*100-map_bachelor.get(key),2);
+        for (String key : map_male.keySet()) {
+
+            double similarity = Math.pow(age - map_age.get(key), 2) + Math.pow(gender * 100 - map_male.get(key), 2) + Math.pow(isBachelorOrHigher * 100 - map_bachelor.get(key), 2);
             map_simi.put(key, similarity);
         }
         List<String> list_num = new ArrayList<>();
-        System.out.println(map_simi);
-        for(int i=0;i<10;i++){
+//        System.out.println(map_simi);
+        for (int i = 0; i < 20; i++) {
             double min = 99999999;
-            String min_key="";
-            for(String key : map_simi.keySet()){
-                if(map_simi.get(key)<min){
+            String min_key = "";
+            for (String key : map_simi.keySet()) {
+                if (map_simi.get(key) < min) {
                     min = map_simi.get(key);
-                    min_key=key;
+                    min_key = key;
+                } else if (map_simi.get(key) == min) {
+                    Random r = new Random();
+                    if (r.nextBoolean()) {
+                        min = map_simi.get(key);
+                        min_key = key;
+                    }
                 }
             }
+//            System.out.println(min_key);
             list_num.add(min_key);
             map_simi.remove(min_key);
         }
-        System.out.println(list_num);
+//        System.out.println(list_num);
         List<String> ans = new ArrayList<>();
-        for(int j=0;j<10;j++){
+        for (int j = 0; j < 20; j++) {
             int max = 0;
-            String max_title="";
-            for (int i=0;i<list.size()-1;i++){
-                if(Objects.equals(CourseBF_Number.get(i), list_num.get(j))){
-                    int days = Integer.parseInt(Launch_Date.get(i).split("/")[0])*31+
-                                Integer.parseInt(Launch_Date.get(i).split("/")[1])
-                            +Integer.parseInt(Launch_Date.get(i).split("/")[2])*365;
-                    if (days>max){
+            String max_title = "";
+            for (int i = 0; i < list.size() - 1; i++) {
+                if (Objects.equals(CourseBF_Number.get(i), list_num.get(j))) {
+                    int days = Integer.parseInt(Launch_Date.get(i).split("/")[0]) * 31 +
+                            Integer.parseInt(Launch_Date.get(i).split("/")[1])
+                            + Integer.parseInt(Launch_Date.get(i).split("/")[2]) * 365;
+                    if (days > max) {
                         max = days;
                         max_title = CourseBF_Title.get(i);
                     }
-
                 }
             }
-            ans.add(max_title);
+            if (!ans.contains(max_title)) {
+                ans.add(max_title);
+            }
+            if (ans.size() == 10) {
+                break;
+            }
 
         }
         return ans;
-
-    }
-
-
-    public static void main(String[] args)throws Exception {
-        OnlineCoursesAnalyzer util = new OnlineCoursesAnalyzer("local.csv");
-//        System.out.println(util.getPtcpCountByInst());
-//        System.out.println(util.getPtcpCountByInstAndSubject());
-//        util.getCourseListOfInstructor().forEach((s,v)->System.out.println(s+v));
-//        System.out.println(util.getCourseListOfInstructor());
-//        System.out.println(util.getCourses(15,"participants"));
-//        util.searchCourses("SCIENCE", 25.0, 400).forEach(System.out::println);
-//        System.out.println(util.recommendCourses(25, 1, 1));
-        util.recommendCourses(25,1,1).forEach(System.out::println);
-
     }
 }
